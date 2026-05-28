@@ -578,11 +578,14 @@ local function build_window()
                     sx + 6, sy + SLOT_H - 14, C_CMD_TXT, 8, false)
                 show(cmd_tx)
                 -- The actual icon XIVHotbar2 would render, on the slot's right
-                -- edge, so the grid mirrors the live hotbar at a glance.
-                local thumb_sz = SLOT_H - 10
+                -- edge, so the grid mirrors the live hotbar at a glance. Kept
+                -- small with margin and vertically centred so it sits cleanly
+                -- inside the slot instead of overflowing it.
+                local thumb_sz = SLOT_H - 18
                 local icon_path = icons.resolve_action(rec.cmd, rec.action, rec.icon)
                 local icon_img = icon_path and
-                    make_icon(icon_path, sx + SLOT_W - thumb_sz - 5, sy + 5, thumb_sz) or nil
+                    make_icon(icon_path, sx + SLOT_W - thumb_sz - 6,
+                        sy + math.floor((SLOT_H - thumb_sz) / 2), thumb_sz) or nil
                 if icon_img then show(icon_img) end
                 ui.slots[slot_id] = { bg = bg, name = name_tx, cmd = cmd_tx, icon = icon_img }
             else
