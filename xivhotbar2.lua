@@ -52,6 +52,10 @@ packets = require('packets')
 resources = require('resources')
 require('luau')
 
+-- In-game hotbar editor (merged from the former FFXI-FFXIVHotbar addon).
+-- Opened with `//xivhotbar edit`; registers its own UI/mouse/keyboard events.
+local editor = require('editor/editor')
+
 -- User settings --
 local defaults = require('defaults')
 local settings = config.load(defaults)
@@ -280,7 +284,9 @@ windower.register_event('addon command', function(command, ...)
     if command == 'reload' then
 		if ui.theme.dev_mode then log('Reloading Hotbar.') end
         reload_hotbar()
-	elseif command == 'release' then --Custom change to release pet 
+	elseif command == 'edit' then -- Open/route the in-game hotbar editor
+		editor.handle_command(args)
+	elseif command == 'release' then --Custom change to release pet
 		windower.chat.input('/pet release <me>') -- Need to us ct 
 		
 	elseif command == 'set' then
@@ -501,6 +507,8 @@ windower.register_event('load', function()
 		config.save(settings)
         player.id = windower.ffxi.get_player().id
         initialize()
+		-- Let the editor refresh the live hotbar directly after a save.
+		editor.init({ reload = reload_hotbar })
 		-- Performance optimization: Remove blocking sleep
 	end
 end)
