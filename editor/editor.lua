@@ -165,14 +165,23 @@ end
 -- Image element backed by a texture file (icon previews / picker thumbnails).
 -- Tinted white so the PNG shows untouched. Path is set via :path() like
 -- XIVHotbar2 does, guarded in case the element lacks the method.
+--
+-- texture.fit = true is essential: without it Windower draws each PNG at its
+-- NATIVE resolution and ignores the size box, so larger source icons (e.g.
+-- weaponskill art) overflow the slot while small ones fit. fit scales every
+-- texture into the sz × sz box, so all icons render at the same size.
 local function make_icon(path, x, y, sz)
     local img = images.new({
-        color = { alpha = 255, red = 255, green = 255, blue = 255 },
-        pos   = { x = x, y = y },
-        size  = { width = sz, height = sz },
+        color   = { alpha = 255, red = 255, green = 255, blue = 255 },
+        pos     = { x = x, y = y },
+        size    = { width = sz, height = sz },
+        texture = { fit = true },
         draggable = false,
     })
     if img.path then img:path(path) end
+    -- Re-assert via methods too, in case the constructor table is ignored.
+    if img.fit  then img:fit(true)    end
+    if img.size then img:size(sz, sz) end
     return img
 end
 
