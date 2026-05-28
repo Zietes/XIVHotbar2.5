@@ -355,23 +355,70 @@ The commands that make this work:
 | `//htb page <n>` | Jump straight to page `n` |
 | `//htb slot <n>` | Fire slot `n` on the **currently active** page |
 
-**Important:** Windower itself cannot read a controller directly, so you need a
-button→key mapper (e.g. **Steam Input**, **JoyToKey**, **antimicro**, or
-**reWASD**) to turn controller buttons into keystrokes. The flow is:
+**Important:** Windower cannot read a controller or FFXI's gamepad mapping
+directly — the only input events an addon receives are keyboard and mouse. So a
+controller setup always works by mapping buttons to **keystrokes** with an
+external tool (Steam Input, JoyToKey, antimicro, reWASD, …), and Windower turns
+those keystrokes into the commands above.
 
-1. Bind keys to the commands in Windower, for example:
-   ```
-   bind numpad7 htb cycle prev
-   bind numpad9 htb cycle next
-   bind numpad1 htb slot 1
-   bind numpad2 htb slot 2
-   ... (one per slot you want, up to your hotbar length)
-   ```
-2. In your mapper, map controller buttons to those keys — e.g. `L1`/`R1` to the
-   cycle keys, and the face buttons / d-pad to the slot keys.
+#### Steam Input setup (recommended: FFXIV-style hold layer)
 
-Now `L1`/`R1` flip between hotbar pages (watch the gold highlight move), and the
-face buttons fire whichever page is active.
+This keeps your controller **100% native FFXI** normally, and only turns the
+buttons into hotbar keys while you **hold a trigger** — just like the FFXIV
+cross-hotbar. Nothing about your normal controls changes.
+
+**Step 1 — bind the keys in Windower.** Paste this into the Windower console
+(or add it to `Windower4/scripts/init.txt` so it loads every time). These use
+numpad keys because XIVHotbar2 doesn't use them for its own row chords, and you
+won't press them by hand while a trigger is held:
+
+```
+bind numpad7 htb cycle prev
+bind numpad9 htb cycle next
+bind numpad1 htb slot 1
+bind numpad2 htb slot 2
+bind numpad3 htb slot 3
+bind numpad4 htb slot 4
+bind numpad5 htb slot 5
+bind numpad6 htb slot 6
+bind numpad8 htb slot 7
+bind numpad0 htb slot 8
+```
+
+(Add more `htb slot N` binds if your hotbar is longer than 8 slots.)
+
+**Step 2 — make a hold layer in Steam.** In Steam, open **FFXI → Controller
+icon → Edit Layout**:
+
+1. Leave the **base layout** as your normal controller setup (gamepad
+   template or your existing FFXI config) — this is what you use 99% of the time.
+2. Add an **Action Layer** named e.g. `Hotbar`.
+3. On a trigger in the base layout — e.g. **Left Trigger (L2)** — add the
+   command **"Hold Action Layer → Hotbar"** (so the layer is active only while
+   L2 is held). Set its activation to *Full Pull* or *Soft Pull* as you prefer.
+4. Inside the **Hotbar layer**, map the buttons to the keys from Step 1:
+
+   | Controller (while holding L2) | Sends key | XIVHotbar2 action |
+   |-------------------------------|-----------|-------------------|
+   | L1 / Left Bumper              | Numpad 7  | `cycle prev` (previous page) |
+   | R1 / Right Bumper             | Numpad 9  | `cycle next` (next page) |
+   | A / Cross                     | Numpad 1  | slot 1 |
+   | B / Circle                    | Numpad 2  | slot 2 |
+   | X / Square                    | Numpad 3  | slot 3 |
+   | Y / Triangle                  | Numpad 4  | slot 4 |
+   | D-pad Up                      | Numpad 5  | slot 5 |
+   | D-pad Right                   | Numpad 6  | slot 6 |
+   | D-pad Down                    | Numpad 8  | slot 7 |
+   | D-pad Left                    | Numpad 0  | slot 8 |
+
+**Result:** play normally with native controls; **hold L2** to light up the
+hotbar layer. While held, `L1`/`R1` flip the active page (watch the gold
+highlight move) and the face buttons + d-pad fire that page's slots. Release L2
+and your controller is back to normal.
+
+> Tip: want a second set of slots? Add another hold layer on **R2** that sends
+> `htb slot 9`–`16`, or map `htb page <n>` keys to jump straight to a page.
+
 
 ### Migrating from XIVHotbar
 
