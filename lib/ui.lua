@@ -724,6 +724,10 @@ end
 -- Performance optimization: Lazy text object creation
 local function ensure_slot_text(ui, row, column, theme_options)
     if not ui.hotbars[row].slot_texts[column] then
+        -- Set slot position globals so the lazily-created text lands at its own
+        -- slot (setup_names_text reads slot_pos_x/slot_pos_y).
+        slot_pos_x = get_slot_x(ui, row, column)
+        slot_pos_y = get_slot_y(ui, row, column)
         ui.hotbars[row].slot_texts[column] = texts.new(table.copy(text_setup), true)
         setup_names_text(ui.hotbars[row].slot_texts[column], theme_options)
     end
@@ -732,6 +736,8 @@ end
 
 local function ensure_slot_cost(ui, row, column, theme_options)
     if not ui.hotbars[row].slot_cost[column] then
+        slot_pos_x = get_slot_x(ui, row, column)
+        slot_pos_y = get_slot_y(ui, row, column)
         ui.hotbars[row].slot_cost[column] = texts.new(table.copy(text_setup), true)
         setup_costs_text(ui.hotbars[row].slot_cost[column], theme_options)
     end
@@ -740,6 +746,8 @@ end
 
 local function ensure_slot_recast_text(ui, row, column, theme_options)
     if not ui.hotbars[row].slot_recast_texts[column] then
+        slot_pos_x = get_slot_x(ui, row, column)
+        slot_pos_y = get_slot_y(ui, row, column)
         ui.hotbars[row].slot_recast_texts[column] = texts.new(table.copy(text_setup), true)
         setup_recasts_text(ui.hotbars[row].slot_recast_texts[column], theme_options)
     end
@@ -748,6 +756,8 @@ end
 
 local function ensure_slot_key(ui, row, column, theme_options)
     if not ui.hotbars[row].slot_keys[column] then
+        slot_pos_x = get_slot_x(ui, row, column)
+        slot_pos_y = get_slot_y(ui, row, column)
         ui.hotbars[row].slot_keys[column] = texts.new(table.copy(text_setup), true)
         setup_keys_text(ui.hotbars[row].slot_keys[column], theme_options)
     end
