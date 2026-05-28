@@ -820,6 +820,19 @@ function action_manager:change_active_hotbar(new_hotbar)
     end
 end
 
+-- cycle the active hotbar page by +1/-1 with wraparound (for controller use)
+function action_manager:cycle_active_hotbar(direction)
+    local max = self.hotbar_settings.max
+    local current = self.hotbar_settings.active_hotbar + (direction or 1)
+    if current > max then
+        current = 1
+    elseif current < 1 then
+        current = max
+    end
+    self.hotbar_settings.active_hotbar = current
+    return current
+end
+
 function action_manager:load(player)
     
 	action_manager:init_action_tables() -- Create/Initialize MainJob, SubJob, Stance, Weaponskill, Stance Tables

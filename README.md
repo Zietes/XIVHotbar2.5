@@ -311,6 +311,9 @@ After copying to `<Global>`, you can delete the character-specific section.
 | `//xivhotbar edit` | Open the in-game hotbar editor (also: `H` key) |
 | `//htb reload` | Reload hotbar (after editing files) |
 | `//htb move` | Enter/exit hotbar positioning mode |
+| `//htb cycle next` / `//htb cycle prev` | Cycle the active hotbar page (controller) |
+| `//htb page <n>` | Jump to hotbar page `n` (controller) |
+| `//htb slot <n>` | Trigger slot `n` on the active page (controller) |
 | `//lua reload xivhotbar2` | Fully reload addon |
 | `\` (backslash) | Toggle Battle/Field pages |
 
@@ -335,6 +338,40 @@ disk), `//xivhotbar edit where` (show the file paths it checks), and
 > This editor was previously the standalone **FFXI-FFXIVHotbar** addon. It is
 > now bundled into XIVHotbar2, so you no longer load it separately — that
 > repository is retired.
+
+### Controller / Gamepad Support
+
+You can drive your hotbars from a controller without needing dozens of unique
+key chords. Instead of one key per slot, a controller uses a **"active page"**
+model: cycle to the page you want, then press a fixed set of buttons to fire
+its slots. The currently active page is outlined with a gold highlight.
+
+The commands that make this work:
+
+| Command | Does |
+|---------|------|
+| `//htb cycle next` | Move to the next hotbar page (wraps around) |
+| `//htb cycle prev` | Move to the previous hotbar page (wraps around) |
+| `//htb page <n>` | Jump straight to page `n` |
+| `//htb slot <n>` | Fire slot `n` on the **currently active** page |
+
+**Important:** Windower itself cannot read a controller directly, so you need a
+button→key mapper (e.g. **Steam Input**, **JoyToKey**, **antimicro**, or
+**reWASD**) to turn controller buttons into keystrokes. The flow is:
+
+1. Bind keys to the commands in Windower, for example:
+   ```
+   bind numpad7 htb cycle prev
+   bind numpad9 htb cycle next
+   bind numpad1 htb slot 1
+   bind numpad2 htb slot 2
+   ... (one per slot you want, up to your hotbar length)
+   ```
+2. In your mapper, map controller buttons to those keys — e.g. `L1`/`R1` to the
+   cycle keys, and the face buttons / d-pad to the slot keys.
+
+Now `L1`/`R1` flip between hotbar pages (watch the gold highlight move), and the
+face buttons fire whichever page is active.
 
 ### Migrating from XIVHotbar
 

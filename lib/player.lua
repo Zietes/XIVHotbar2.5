@@ -158,6 +158,11 @@ function player:change_active_hotbar(new_hotbar)
 	action_manager:change_active_hotbar(new_hotbar)
 end
 
+-- cycle the active hotbar page by +1/-1 with wraparound (for controller use)
+function player:cycle_active_hotbar(direction)
+	return action_manager:cycle_active_hotbar(direction)
+end
+
 function player:insert_action(args)
 	action_manager:insert_action(player.sub_job, args)
 end

@@ -187,13 +187,21 @@ function reload_hotbar()
 	end
 	player:load_hotbar()
    	ui:load_player_hotbar(player:get_hotbar_info())
-	
+	-- Keep the active-page highlight in sync after a (re)load.
+	ui:highlight_active_hotbar(player:get_active_hotbar())
 end
 
 
 -- change active hotbar --
 function change_active_hotbar(new_hotbar)
     player:change_active_hotbar(new_hotbar)
+    ui:highlight_active_hotbar(player:get_active_hotbar())
+end
+
+-- cycle the active hotbar page (for controller use) --
+function cycle_active_hotbar(direction)
+    player:cycle_active_hotbar(direction)
+    ui:highlight_active_hotbar(player:get_active_hotbar())
 end
 
 --------------------
@@ -313,8 +321,24 @@ windower.register_event('addon command', function(command, ...)
         windower.chat.input('/ma '..args[1]..' <me>')
     elseif command == 'execute' then
         change_active_hotbar(tonumber(args[1]))
-        if tonumber(args[2]) <= theme_options.columns then 
+        if tonumber(args[2]) <= theme_options.columns then
 			trigger_action(tonumber(args[2]))
+        end
+    elseif command == 'cycle' then
+        -- Controller: step the active hotbar page. 'prev' goes back, anything
+        -- else (or no arg) goes forward. Both wrap around.
+        local direction = (args[1] and args[1]:lower() == 'prev') and -1 or 1
+        cycle_active_hotbar(direction)
+    elseif command == 'page' then
+        -- Controller: jump straight to a specific hotbar page.
+        local page = tonumber(args[1])
+        if page then change_active_hotbar(page) end
+    elseif command == 'slot' then
+        -- Controller: trigger a slot on the CURRENTLY active page (no row/page
+        -- needed), so a fixed set of buttons works across all pages.
+        local slot = tonumber(args[1])
+        if slot and slot <= theme_options.columns then
+            trigger_action(slot)
         end
     elseif command == 'reload' then
 		print("Reload 2") 

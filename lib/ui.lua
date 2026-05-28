@@ -1115,6 +1115,7 @@ function ui:hide()
     self.battle_notice:hide()
     self.feedback_icon:hide()
     self.inventory_count:hide()
+    self:hide_active_highlight()
     if (self.active_environment ~= nil) then
         self.active_environment['battle']:hide()
         self.active_environment['field']:hide()
@@ -1140,6 +1141,52 @@ end
 function ui:hide_hover()
 	self.hover_icon:hide()
 	self.action_description:hide()
+end
+
+-- Highlight the active hotbar page (for controller cycling) by drawing a gold
+-- frame around every slot of the active row and hiding it on the others. The
+-- border images are built lazily on first use so they're created AFTER the
+-- slot icons and therefore draw on top of them.
+function ui:highlight_active_hotbar(active)
+	if not self.is_setup then return end
+
+	if not self.page_highlights then
+		self.page_highlights = {}
+		local frame_path = windower.addon_path .. '/themes/' .. (self.theme.frame_theme:lower()) .. '/frame.png'
+		for h = 1, self.theme.rows do
+			self.page_highlights[h] = {}
+			for s = 1, self.theme.columns do
+				local img = images.new(table.copy(images_setup, true))
+				setup_image(img, frame_path)
+				img:size(self.image_width + 4, self.image_height + 4)
+				img:pos(get_slot_x(self, h, s) - 2, get_slot_y(self, h, s) - 2)
+				img:color(255, 215, 0)   -- gold tint over the frame
+				img:alpha(255)
+				img:hide()
+				self.page_highlights[h][s] = img
+			end
+		end
+	end
+
+	for h = 1, self.theme.rows do
+		for s = 1, self.theme.columns do
+			local img = self.page_highlights[h] and self.page_highlights[h][s]
+			if img then
+				if h == active then img:show() else img:hide() end
+			end
+		end
+	end
+end
+
+-- hide the active-page highlight entirely
+function ui:hide_active_highlight()
+	if not self.page_highlights then return end
+	for h = 1, self.theme.rows do
+		for s = 1, self.theme.columns do
+			local img = self.page_highlights[h] and self.page_highlights[h][s]
+			if img then img:hide() end
+		end
+	end
 end
 
 -- show ui components
