@@ -122,4 +122,50 @@ function icons.resolve(value)
     return nil
 end
 
+-- The icon XIVHotbar2 will ACTUALLY render for a slot, so the editor preview
+-- matches the live hotbar. Mirrors lib/ui.lua load_action():
+--   * an explicit custom icon always wins (images/icons/custom/<icon>.png)
+--   * otherwise ma/ja auto-resolve to images/icons/{spells,abilities}/<id>.png
+--     and ws to images/icons/weapons/<weapon-type>.png, using the same
+--     priv_res/database the engine renders from.
+-- Returns the absolute path, or nil when the slot would render blank (so the
+-- caller can warn the user to pick a custom icon).
+--
+-- database is required lazily: by the time the editor is open the engine has
+-- already called database:import(), and require() hands back that same
+-- populated instance.
+local database = nil
+local function get_database()
+    if not database then
+        local ok, db = pcall(require, 'priv_res/database')
+        if ok then database = db end
+    end
+    return database
+end
+
+function icons.resolve_action(cmd, action, custom)
+    -- Explicit custom icon takes priority, exactly like the engine.
+    if custom and custom ~= '' then
+        local p = icons.resolve(custom)
+        if p then return p end
+    end
+    if not action or action == '' then return nil end
+
+    local db = get_database()
+    if not db then return nil end
+    local key = action:lower()
+    local dir = icons.dir()
+    local entry, set, fmt
+    if     cmd == 'ma' then entry, set, fmt = db.ma and db.ma[key], 'spells',    '%05d'
+    elseif cmd == 'ja' then entry, set, fmt = db.ja and db.ja[key], 'abilities', '%05d'
+    elseif cmd == 'ws' then entry, set, fmt = db.ws and db.ws[key], 'weapons',   '%02d'
+    end
+    if not entry or not entry.icon then return nil end
+    local id = tonumber(entry.icon)
+    if not id then return nil end
+    local path = dir .. set .. SEP .. string.format(fmt, id) .. '.png'
+    if file_exists(path) then return path end
+    return nil
+end
+
 return icons

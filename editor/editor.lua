@@ -221,7 +221,7 @@ local function destroy_window()
     ui.drop = {}
     -- slot grids
     for _, group in pairs(ui.slots) do
-        destroy(group.bg); destroy(group.name); destroy(group.cmd)
+        destroy(group.bg); destroy(group.name); destroy(group.cmd); destroy(group.icon)
     end
     ui.slots = {}
     -- static elements
@@ -572,12 +572,19 @@ local function build_window()
             if not empty then
                 local label = (rec.label ~= '' and rec.label)
                            or (rec.action ~= '' and rec.action) or '—'
-                local name_tx = make_text(label:sub(1, 10), sx + 6, sy + 6, C_LABEL_TXT, 9, true)
+                local name_tx = make_text(label:sub(1, 8), sx + 6, sy + 6, C_LABEL_TXT, 9, true)
                 show(name_tx)
                 local cmd_tx = make_text(rec.cmd ~= '' and rec.cmd or '·',
                     sx + 6, sy + SLOT_H - 14, C_CMD_TXT, 8, false)
                 show(cmd_tx)
-                ui.slots[slot_id] = { bg = bg, name = name_tx, cmd = cmd_tx }
+                -- The actual icon XIVHotbar2 would render, on the slot's right
+                -- edge, so the grid mirrors the live hotbar at a glance.
+                local thumb_sz = SLOT_H - 10
+                local icon_path = icons.resolve_action(rec.cmd, rec.action, rec.icon)
+                local icon_img = icon_path and
+                    make_icon(icon_path, sx + SLOT_W - thumb_sz - 5, sy + 5, thumb_sz) or nil
+                if icon_img then show(icon_img) end
+                ui.slots[slot_id] = { bg = bg, name = name_tx, cmd = cmd_tx, icon = icon_img }
             else
                 ui.slots[slot_id] = { bg = bg }
             end
@@ -635,11 +642,17 @@ local function build_window()
             }
         end
 
-        -- Live preview of the chosen icon (or a hint when on auto).
+        -- Live preview of the icon XIVHotbar2 will actually render: the custom
+        -- icon if set, otherwise the auto-resolved spell/ability/WS icon. If it
+        -- resolves to nothing the slot would render blank in-game, so prompt the
+        -- user to pick one rather than silently showing "auto".
         local px = ex + 8 + 576 + btn_w + 16
-        local prev_path = icons.resolve(e.icon)
+        local prev_path = icons.resolve_action(e.cmd, e.action, e.icon)
         if prev_path then
             ui.el.icon_prev = make_icon(prev_path, px, btn_y - 2, btn_h + 4)
+            show(ui.el.icon_prev)
+        elseif (e.action or '') ~= '' and (e.icon or '') == '' then
+            ui.el.icon_prev = make_text('icon: none — pick one', px, btn_y + 5, C_ERROR, 9, false)
             show(ui.el.icon_prev)
         else
             ui.el.icon_prev = make_text('icon: auto', px, btn_y + 5, C_HINT, 9, false)

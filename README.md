@@ -308,10 +308,33 @@ After copying to `<Global>`, you can delete the character-specific section.
 
 | Command | Description |
 |---------|-------------|
+| `//xivhotbar edit` | Open the in-game hotbar editor (also: `H` key) |
 | `//htb reload` | Reload hotbar (after editing files) |
 | `//htb move` | Enter/exit hotbar positioning mode |
 | `//lua reload xivhotbar2` | Fully reload addon |
 | `\` (backslash) | Toggle Battle/Field pages |
+
+### In-Game Hotbar Editor
+
+XIVHotbar2 now includes a built-in graphical editor for your hotbar slots — no
+need to alt-tab to a text editor. Open it with `//xivhotbar edit` or by pressing
+the `H` key (when the chat box is closed).
+
+- Shows your current job's three hotbars as a clickable 3 × 12 grid.
+- Click a slot, then pick a command / action / target / icon from dropdowns.
+- Each slot previews the **actual icon** that will render in-game, so you can
+  spot a missing icon before saving (it warns `icon: none — pick one`).
+- **Save** writes the change back to `data/<Character>/<job>.lua` (with an
+  automatic `.bak` backup under `data/backups/`) and refreshes the live hotbar
+  immediately.
+
+Other editor sub-commands: `//xivhotbar edit reload` (re-read the file from
+disk), `//xivhotbar edit where` (show the file paths it checks), and
+`//xivhotbar edit macros` (list the macro library and its file path).
+
+> This editor was previously the standalone **FFXI-FFXIVHotbar** addon. It is
+> now bundled into XIVHotbar2, so you no longer load it separately — that
+> repository is retired.
 
 ### Migrating from XIVHotbar
 
