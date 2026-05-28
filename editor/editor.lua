@@ -166,21 +166,22 @@ end
 -- Tinted white so the PNG shows untouched. Path is set via :path() like
 -- XIVHotbar2 does, guarded in case the element lacks the method.
 --
--- texture.fit = true is essential: without it Windower draws each PNG at its
--- NATIVE resolution and ignores the size box, so larger source icons (e.g.
--- weaponskill art) overflow the slot while small ones fit. fit scales every
--- texture into the sz × sz box, so all icons render at the same size.
+-- texture.fit = false is essential and matches XIVHotbar2's own images_setup:
+-- with fit OFF, Windower stretches the texture to fill the size box, so every
+-- icon renders at exactly sz × sz regardless of its native resolution. With
+-- fit ON the element instead takes the texture's NATIVE size, so large source
+-- icons (e.g. 59×58 weaponskill art vs 32×32 spells) overflow the slot.
 local function make_icon(path, x, y, sz)
     local img = images.new({
         color   = { alpha = 255, red = 255, green = 255, blue = 255 },
         pos     = { x = x, y = y },
         size    = { width = sz, height = sz },
-        texture = { fit = true },
+        texture = { fit = false },
         draggable = false,
     })
     if img.path then img:path(path) end
     -- Re-assert via methods too, in case the constructor table is ignored.
-    if img.fit  then img:fit(true)    end
+    if img.fit  then img:fit(false)   end
     if img.size then img:size(sz, sz) end
     return img
 end
