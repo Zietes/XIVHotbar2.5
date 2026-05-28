@@ -1128,10 +1128,11 @@ function ui:hide()
             self.hotbars[h].slot_overlay[i]:hide()
             self.hotbars[h].slot_frames[i]:hide()
             self.hotbars[h].slot_recasts[i]:hide()
-            self.hotbars[h].slot_texts[i]:hide()
-            self.hotbars[h].slot_cost[i]:hide()
-            self.hotbars[h].slot_recast_texts[i]:hide()
-            self.hotbars[h].slot_keys[i]:hide()
+            -- Text objects are created lazily, so empty slots may be nil
+            if self.hotbars[h].slot_texts[i] then self.hotbars[h].slot_texts[i]:hide() end
+            if self.hotbars[h].slot_cost[i] then self.hotbars[h].slot_cost[i]:hide() end
+            if self.hotbars[h].slot_recast_texts[i] then self.hotbars[h].slot_recast_texts[i]:hide() end
+            if self.hotbars[h].slot_keys[i] then self.hotbars[h].slot_keys[i]:hide() end
         end
     end
 end
@@ -1163,10 +1164,11 @@ function ui:show(player_hotbar, environment)
 			self.hotbars[h].number:show()
             if action ~= nil then self.hotbars[h].slot_frames[i]:show() end
             if self.theme.hide_empty_slots == false then self.hotbars[h].slot_backgrounds[i]:show() end
-            if self.theme.hide_action_names == false then self.hotbars[h].slot_texts[i]:show() end
-            if self.theme.hide_action_cost == false then self.hotbars[h].slot_cost[i]:show() end
-            if self.theme.hide_recast_text == false then self.hotbars[h].slot_recast_texts[i]:show() end
-            if self.theme.hide_empty_slots == false then self.hotbars[h].slot_keys[i]:show() end
+            -- Text objects are created lazily, so empty slots may be nil
+            if self.theme.hide_action_names == false and self.hotbars[h].slot_texts[i] then self.hotbars[h].slot_texts[i]:show() end
+            if self.theme.hide_action_cost == false and self.hotbars[h].slot_cost[i] then self.hotbars[h].slot_cost[i]:show() end
+            if self.theme.hide_recast_text == false and self.hotbars[h].slot_recast_texts[i] then self.hotbars[h].slot_recast_texts[i]:show() end
+            if self.theme.hide_empty_slots == false and self.hotbars[h].slot_keys[i] then self.hotbars[h].slot_keys[i]:show() end
         end
     end
 end
