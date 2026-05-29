@@ -65,13 +65,33 @@ problem:
    pad isn't reaching XInput at all (a wrapper/Steam may be capturing it). Close
    other controller software and retry.
 3. **`LT`/`RT` show numbers and the D-pad row flips to 1 when pressed, but
-   nothing happens in game** → input is read fine; the issue is the keys
-   reaching FFXI. Check that:
-   - the line **"FFXI focused: 1"** shows while the game is the active window
-     (keys are only sent when this is 1 and a trigger is held), and
-   - the five `bind` lines are actually loaded in Windower (type one of the keys
-     — e.g. Numpad 5 — by hand on your keyboard; if the cursor doesn't activate,
-     the bind is missing, not the script).
+   nothing happens in game** → the controller is read fine; the keys just aren't
+   reaching FFXI. This is almost always the **administrator mismatch** below.
+
+### The #1 cause: "run as administrator" mismatch
+
+Windower/FFXI are almost always run **as administrator**. Windows refuses to let
+a *non-elevated* program send keystrokes into an *elevated* window — so the
+script reads your pad perfectly but its keys are silently dropped. That is
+exactly the "pad detected, overlay moves, nothing in game" symptom.
+
+This version **auto-elevates**: on launch it relaunches itself as admin (you'll
+get a one-time UAC prompt — click **Yes**). Confirm it worked two ways:
+
+- The startup tray message and the debug overlay both show **`Admin: YES`**.
+- **Use the built-in self-test:** focus FFXI and press **F8** on your keyboard.
+  That injects the activate key exactly like the controller does.
+  - Cursor activates → the key path works; the controller will too.
+  - Nothing happens → still blocked. Make sure the script actually elevated
+    (Admin: YES), and that Windower itself is the elevated window. As a manual
+    fallback, right-click the `.ahk` → **Run as administrator**.
+
+If F8 works but the controller still doesn't, then it's only the controller
+gate: check **"FFXI focused: 1"** shows and a **trigger is held** (keys only
+send when both are true).
+
+Also verify your five `bind` lines are loaded in Windower — type Numpad 5 by
+hand; if the cursor doesn't activate, the bind is missing, not the script.
 
 This version sends each key as a real **down → hold (~40ms) → up** using **scan
 codes**, because Windower reads the keyboard through DirectInput and a normal

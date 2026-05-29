@@ -23,6 +23,26 @@
 SetBatchLines, -1
 
 ; ---------------------------------------------------------------------------
+;  Auto-elevate. Windower/FFXI almost always run AS ADMINISTRATOR, and Windows
+;  blocks keystrokes injected by a non-elevated process into an elevated window
+;  (UIPI). Reading the controller still works, but the keys never reach the
+;  game -- which looks exactly like "pad detected, overlay moves, nothing in
+;  game". Relaunch ourselves elevated so injected keys are accepted.
+; ---------------------------------------------------------------------------
+if (!A_IsAdmin)
+{
+    try
+    {
+        if (A_IsCompiled)
+            Run, *RunAs "%A_ScriptFullPath%" /restart
+        else
+            Run, *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
+    }
+    ExitApp
+}
+
+
+; ---------------------------------------------------------------------------
 ;  CONFIG  -- edit these if you want different keys / behaviour
 ; ---------------------------------------------------------------------------
 global PadIndex        := 0      ; which XInput pad (0 = first controller)
@@ -95,7 +115,7 @@ Menu, Tray, Add, Toggle debug overlay, ToggleDebug
 VarSetCapacity(probe, 16, 0)
 probeRes := DllCall(XInputGetStateProc, "UInt", PadIndex, "Ptr", &probe, "UInt")
 padMsg := (probeRes = 0) ? ("DETECTED on pad " PadIndex) : ("NOT detected (plug in / check PadIndex). code " probeRes)
-TrayTip, XIVHotbar2 Controller running, % "XInput DLL: " XInputDll "`nController: " padMsg "`n`nPress Ctrl+Alt+D for the debug overlay.", 10, 1
+TrayTip, XIVHotbar2 Controller running, % "Admin: " (A_IsAdmin ? "YES" : "NO -- keys may be blocked!") "`nXInput DLL: " XInputDll "`nController: " padMsg "`n`nCtrl+Alt+D = overlay   |   F8 (in FFXI) = key self-test", 10, 1
 
 SetTimer, PollPad, %PollInterval%
 return
@@ -104,6 +124,16 @@ return
 ;  Hotkeys  (defined as real hotkeys so they actually fire)
 ; ---------------------------------------------------------------------------
 ^!d::Gosub, ToggleDebug   ; Ctrl+Alt+D toggles the debug overlay
+
+; F8 = manual injection self-test. Focus FFXI and press F8 (on the keyboard):
+; it sends the "activate" key exactly the way the controller does. If your
+; cursor activates -> the key path works and the rest is just the controller
+; gate. If F8 does nothing -> it's the bind/injection side (likely admin), not
+; the controller code.
+F8::
+    SendKey(Key_Activate)
+    TrayTip, Self-test, % "Sent activate key (" Key_Activate ") to the focused window.`nAdmin: " (A_IsAdmin ? "YES" : "NO"), 5, 1
+return
 
 ; ---------------------------------------------------------------------------
 ;  Main poll loop
@@ -140,6 +170,7 @@ PollPad:
     if (DebugMode)
     {
         ToolTip, % "XIVHotbar2 controller [DEBUG]`n"
+            . "Admin: " (A_IsAdmin ? "YES" : "NO -- keys likely blocked") "`n"
             . "FFXI focused: " ffxiActive "   (keys only send when 1)`n"
             . "LT: " lTrigger "   RT: " rTrigger "   (need > " TriggerThresh ")`n"
             . "trigger layer: " (layerOn ? "ON" : "off") "`n"
