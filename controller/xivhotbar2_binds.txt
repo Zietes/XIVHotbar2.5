@@ -1,0 +1,12 @@
+# XIVHotbar2 - controller key binds
+# ---------------------------------------------------------------------------
+# Load these in Windower so the keys the AutoHotkey bridge sends drive the
+# hotbar cursor. Either paste the lines (without the leading "//") into the
+# Windower console, or load this file with:  //exec xivhotbar2_controller
+# (place this file in Windower4/scripts/ and rename to .txt if needed).
+
+bind numpad8 htb cursor up
+bind numpad2 htb cursor down
+bind numpad4 htb cursor left
+bind numpad6 htb cursor right
+bind numpad5 htb cursor activate

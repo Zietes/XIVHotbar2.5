@@ -366,9 +366,17 @@ The commands that make this work:
 
 **Important:** Windower cannot read a controller or FFXI's gamepad mapping
 directly — the only input events an addon receives are keyboard and mouse. So a
-controller setup always works by mapping buttons to **keystrokes** with an
-external tool (Steam Input, JoyToKey, antimicro, reWASD, …), and Windower turns
-those keystrokes into the commands above.
+controller setup always works by mapping buttons to **keystrokes**, and Windower
+turns those keystrokes into the commands above. There are two ways to do that:
+
+- **Bundled AutoHotkey bridge (recommended, no Steam needed).** This addon ships
+  a small XInput script in [`controller/`](controller/README.md) that reads your
+  Xbox pad and sends the cursor keys while you hold a trigger. See
+  [`controller/README.md`](controller/README.md) for the 4-step setup. This is
+  the same technique the sibling addon *xivcrossbar* uses.
+- **An external mapper** (Steam Input, JoyToKey, AntiMicroX, reWASD, …) — see
+  the Steam Input walkthrough below. Both routes drive the identical commands,
+  so you can use whichever you get working.
 
 #### Steam Input setup (FFXIV-style hold layer + cursor)
 
