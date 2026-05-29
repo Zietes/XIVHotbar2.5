@@ -204,6 +204,33 @@ function cycle_active_hotbar(direction)
     ui:highlight_active_hotbar(player:get_active_hotbar())
 end
 
+-- Controller cursor: column position within the active page. The cursor's row
+-- IS the active page, so up/down move between pages and left/right move along
+-- the slots, all with wraparound.
+cursor_slot = 1
+
+function move_cursor(direction)
+    if direction == 'up' then
+        player:cycle_active_hotbar(1)        -- next page (drawn above)
+        ui:highlight_active_hotbar(player:get_active_hotbar())
+    elseif direction == 'down' then
+        player:cycle_active_hotbar(-1)       -- previous page (drawn below)
+        ui:highlight_active_hotbar(player:get_active_hotbar())
+    elseif direction == 'left' then
+        cursor_slot = cursor_slot - 1
+        if cursor_slot < 1 then cursor_slot = theme_options.columns end
+    elseif direction == 'right' then
+        cursor_slot = cursor_slot + 1
+        if cursor_slot > theme_options.columns then cursor_slot = 1 end
+    end
+    ui:move_cursor(player:get_active_hotbar(), cursor_slot)
+end
+
+-- fire whatever slot the cursor is currently on --
+function activate_cursor()
+    trigger_action(cursor_slot)
+end
+
 --------------------
 -- Addon Commands -- --
 --------------------
@@ -339,6 +366,15 @@ windower.register_event('addon command', function(command, ...)
         local slot = tonumber(args[1])
         if slot and slot <= theme_options.columns then
             trigger_action(slot)
+        end
+    elseif command == 'cursor' then
+        -- Controller: a movable selection cursor. 'up'/'down'/'left'/'right'
+        -- move it; 'activate' (or 'select') fires the slot it's sitting on.
+        local sub = args[1] and args[1]:lower() or ''
+        if sub == 'activate' or sub == 'select' then
+            activate_cursor()
+        else
+            move_cursor(sub)
         end
     elseif command == 'reload' then
 		print("Reload 2") 

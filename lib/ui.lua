@@ -1116,6 +1116,7 @@ function ui:hide()
     self.feedback_icon:hide()
     self.inventory_count:hide()
     self:hide_active_highlight()
+    self:hide_cursor()
     if (self.active_environment ~= nil) then
         self.active_environment['battle']:hide()
         self.active_environment['field']:hide()
@@ -1187,6 +1188,32 @@ function ui:hide_active_highlight()
 			if img then img:hide() end
 		end
 	end
+end
+
+-- Move the selection cursor to a single slot (controller navigation). Draws a
+-- bright cyan box around the chosen slot, on top of the gold page outline, so
+-- the player can see exactly which slot "activate" will fire. The cursor image
+-- is built lazily on first use so it draws above everything else.
+function ui:move_cursor(hotbar, slot)
+	if not self.is_setup then return end
+
+	if not self.cursor_highlight then
+		local frame_path = windower.addon_path .. '/themes/' .. (self.theme.frame_theme:lower()) .. '/frame.png'
+		local img = images.new(table.copy(images_setup, true))
+		setup_image(img, frame_path)
+		img:size(self.image_width + 6, self.image_height + 6)
+		img:color(0, 220, 255)   -- bright cyan, distinct from the gold page outline
+		img:alpha(255)
+		self.cursor_highlight = img
+	end
+
+	self.cursor_highlight:pos(get_slot_x(self, hotbar, slot) - 3, get_slot_y(self, hotbar, slot) - 3)
+	self.cursor_highlight:show()
+end
+
+-- hide the selection cursor
+function ui:hide_cursor()
+	if self.cursor_highlight then self.cursor_highlight:hide() end
 end
 
 -- show ui components

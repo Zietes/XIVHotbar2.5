@@ -342,18 +342,27 @@ disk), `//xivhotbar edit where` (show the file paths it checks), and
 ### Controller / Gamepad Support
 
 You can drive your hotbars from a controller without needing dozens of unique
-key chords. Instead of one key per slot, a controller uses a **"active page"**
-model: cycle to the page you want, then press a fixed set of buttons to fire
-its slots. The currently active page is outlined with a gold highlight.
+key chords. There are two models, both built in:
+
+- **Cursor model (recommended):** move a selection cursor around the hotbars
+  with the D-pad, then press one button to activate the highlighted slot. This
+  is the most controller-natural — you only need ~5 buttons total.
+- **Direct-fire model:** each button fires a fixed slot on the active page; use
+  the bumpers to flip pages.
+
+The active page is outlined in **gold**; the cursor is a **bright cyan** box on
+the single slot that "activate" will fire.
 
 The commands that make this work:
 
 | Command | Does |
 |---------|------|
-| `//htb cycle next` | Move to the next hotbar page (wraps around) |
-| `//htb cycle prev` | Move to the previous hotbar page (wraps around) |
+| `//htb cursor up` / `down` | Move the cursor to the page above / below (wraps) |
+| `//htb cursor left` / `right` | Move the cursor along the slots (wraps) |
+| `//htb cursor activate` | Fire the slot the cursor is on |
+| `//htb cycle next` / `prev` | (Direct model) flip the active page |
 | `//htb page <n>` | Jump straight to page `n` |
-| `//htb slot <n>` | Fire slot `n` on the **currently active** page |
+| `//htb slot <n>` | (Direct model) fire slot `n` on the active page |
 
 **Important:** Windower cannot read a controller or FFXI's gamepad mapping
 directly — the only input events an addon receives are keyboard and mouse. So a
@@ -361,11 +370,14 @@ controller setup always works by mapping buttons to **keystrokes** with an
 external tool (Steam Input, JoyToKey, antimicro, reWASD, …), and Windower turns
 those keystrokes into the commands above.
 
-#### Steam Input setup (recommended: FFXIV-style hold layer)
+#### Steam Input setup (FFXIV-style hold layer + cursor)
 
 This keeps your controller **100% native FFXI** normally, and only turns the
 buttons into hotbar keys while you **hold a trigger** — just like the FFXIV
 cross-hotbar. Nothing about your normal controls changes.
+
+The flow you want: **hold L2**, use the **D-pad** to move the cyan cursor to the
+ability you want, then — still holding L2 — press **A** to activate it.
 
 **Step 1 — bind the keys in Windower.** Paste this into the Windower console
 (or add it to `Windower4/scripts/init.txt` so it loads every time). These use
@@ -373,19 +385,12 @@ numpad keys because XIVHotbar2 doesn't use them for its own row chords, and you
 won't press them by hand while a trigger is held:
 
 ```
-bind numpad7 htb cycle prev
-bind numpad9 htb cycle next
-bind numpad1 htb slot 1
-bind numpad2 htb slot 2
-bind numpad3 htb slot 3
-bind numpad4 htb slot 4
-bind numpad5 htb slot 5
-bind numpad6 htb slot 6
-bind numpad8 htb slot 7
-bind numpad0 htb slot 8
+bind numpad8 htb cursor up
+bind numpad2 htb cursor down
+bind numpad4 htb cursor left
+bind numpad6 htb cursor right
+bind numpad5 htb cursor activate
 ```
-
-(Add more `htb slot N` binds if your hotbar is longer than 8 slots.)
 
 **Step 2 — make a hold layer in Steam.** In Steam, open **FFXI → Controller
 icon → Edit Layout**:
@@ -400,24 +405,23 @@ icon → Edit Layout**:
 
    | Controller (while holding L2) | Sends key | XIVHotbar2 action |
    |-------------------------------|-----------|-------------------|
-   | L1 / Left Bumper              | Numpad 7  | `cycle prev` (previous page) |
-   | R1 / Right Bumper             | Numpad 9  | `cycle next` (next page) |
-   | A / Cross                     | Numpad 1  | slot 1 |
-   | B / Circle                    | Numpad 2  | slot 2 |
-   | X / Square                    | Numpad 3  | slot 3 |
-   | Y / Triangle                  | Numpad 4  | slot 4 |
-   | D-pad Up                      | Numpad 5  | slot 5 |
-   | D-pad Right                   | Numpad 6  | slot 6 |
-   | D-pad Down                    | Numpad 8  | slot 7 |
-   | D-pad Left                    | Numpad 0  | slot 8 |
+   | D-pad Up                      | Numpad 8  | cursor up (page above) |
+   | D-pad Down                    | Numpad 2  | cursor down (page below) |
+   | D-pad Left                    | Numpad 4  | cursor left |
+   | D-pad Right                   | Numpad 6  | cursor right |
+   | A / Cross                     | Numpad 5  | **activate selected slot** |
 
 **Result:** play normally with native controls; **hold L2** to light up the
-hotbar layer. While held, `L1`/`R1` flip the active page (watch the gold
-highlight move) and the face buttons + d-pad fire that page's slots. Release L2
-and your controller is back to normal.
+hotbar. While held, the **D-pad** moves the cyan cursor (left/right along a
+page, up/down between pages — the gold outline follows), and **A** fires the
+highlighted ability. Release L2 and your controller is back to normal.
 
-> Tip: want a second set of slots? Add another hold layer on **R2** that sends
-> `htb slot 9`–`16`, or map `htb page <n>` keys to jump straight to a page.
+> Tips:
+> - Map the left **analog stick** to the same four cursor keys if you'd rather
+>   steer the cursor with the stick than the D-pad.
+> - Prefer one-button-per-slot instead? Use the direct-fire model: bind
+>   `htb slot 1`…`N` to keys and put them on the face buttons / D-pad, with
+>   `htb cycle prev`/`next` on the bumpers.
 
 
 ### Migrating from XIVHotbar
