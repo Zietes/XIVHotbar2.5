@@ -11,11 +11,15 @@
 ;  while a trigger is held do the D-pad / A become hotbar-cursor keys.
 ;
 ;  Requires AutoHotkey v1.1+  (https://www.autohotkey.com/)
+;
+;  TROUBLESHOOTING: press  Ctrl+Alt+D  to toggle a live debug overlay that
+;  shows whether the pad is read, the trigger values, and the last key sent.
 ; ============================================================================
 
 #NoEnv
 #SingleInstance Force
 #Persistent
+#InstallKeybdHook
 SetBatchLines, -1
 
 ; ---------------------------------------------------------------------------
@@ -25,18 +29,21 @@ global PadIndex        := 0      ; which XInput pad (0 = first controller)
 global TriggerThresh   := 30     ; 0-255, how far a trigger must be pulled
 global PollInterval    := 15     ; ms between polls
 global RepeatDelay     := 350    ; ms before a held direction starts repeating
-global RepeatRate      := 120    ; ms between repeats while a direction is held
+global RepeatRate      := 130    ; ms between repeats while a direction is held
+global KeyHoldTime     := 40     ; ms to hold each key down (so DirectInput sees it)
 global OnlyWhenFFXI    := true   ; only act while the FFXI window is focused
 
-; Keys sent to FFXI/Windower. These MUST match your Windower binds:
+; Keys sent to FFXI/Windower, as SCAN CODES (NumLock-independent and read
+; correctly by Windower's DirectInput keyboard hook). These MUST match your
+; Windower binds:
 ;   bind numpad8 htb cursor up      |  bind numpad2 htb cursor down
 ;   bind numpad4 htb cursor left    |  bind numpad6 htb cursor right
 ;   bind numpad5 htb cursor activate
-global Key_Up       := "{Numpad8}"
-global Key_Down     := "{Numpad2}"
-global Key_Left     := "{Numpad4}"
-global Key_Right    := "{Numpad6}"
-global Key_Activate := "{Numpad5}"
+global Key_Up       := "sc048"   ; Numpad 8
+global Key_Down     := "sc050"   ; Numpad 2
+global Key_Left     := "sc04B"   ; Numpad 4
+global Key_Right    := "sc04D"   ; Numpad 6
+global Key_Activate := "sc04C"   ; Numpad 5
 
 ; ---------------------------------------------------------------------------
 ;  XInput setup
@@ -57,7 +64,12 @@ if (!hXInput)
     MsgBox, 16, XIVHotbar2 Controller, Could not load XInput. Install the DirectX runtime or AutoHotkey, then try again.
     ExitApp
 }
-global XInputGetStateProc := XInputDll . "\XInputGetState"
+global XInputGetStateProc := DllCall("GetProcAddress", "Ptr", hXInput, "AStr", "XInputGetState", "Ptr")
+if (!XInputGetStateProc)
+{
+    MsgBox, 16, XIVHotbar2 Controller, Loaded %XInputDll% but XInputGetState was not found.
+    ExitApp
+}
 
 ; XINPUT_GAMEPAD button bitmasks
 global XB_DPAD_UP    := 0x0001
@@ -70,6 +82,14 @@ global XB_A          := 0x1000
 global prevUp := 0, prevDown := 0, prevLeft := 0, prevRight := 0, prevA := 0
 global nextUp := 0, nextDown := 0, nextLeft := 0, nextRight := 0
 
+; Debug
+global DebugMode := false
+global LastKey   := "(none)"
+
+; Tray menu
+Menu, Tray, Tip, XIVHotbar2 Controller (Ctrl+Alt+D = debug)
+Menu, Tray, Add, Toggle debug overlay, ToggleDebug
+
 SetTimer, PollPad, %PollInterval%
 return
 
@@ -77,16 +97,25 @@ return
 ;  Main poll loop
 ; ---------------------------------------------------------------------------
 PollPad:
-    if (OnlyWhenFFXI && !WinActive("ahk_class FFXiClass"))
+    ffxiActive := WinActive("ahk_class FFXiClass") ? 1 : 0
+
+    ; Read the pad whenever FFXI is focused, OR always while debugging so you
+    ; can verify the controller is seen even from the desktop.
+    if (OnlyWhenFFXI && !ffxiActive && !DebugMode)
     {
         ResetPadState()
+        ToolTip
         return
     }
 
     VarSetCapacity(state, 16, 0)               ; XINPUT_STATE
     res := DllCall(XInputGetStateProc, "UInt", PadIndex, "Ptr", &state, "UInt")
-    if (res != 0)                               ; non-zero = controller not connected
+    connected := (res = 0)
+
+    if (!connected)
     {
+        if (DebugMode)
+            ToolTip, % "XIVHotbar2 controller`nPad " PadIndex ": NOT CONNECTED (err " res ")`nFFXI focused: " ffxiActive
         ResetPadState()
         return
     }
@@ -94,16 +123,31 @@ PollPad:
     buttons   := NumGet(state, 4, "UShort")     ; wButtons  @ offset 4
     lTrigger  := NumGet(state, 6, "UChar")      ; bLeftTrigger  @ 6
     rTrigger  := NumGet(state, 7, "UChar")      ; bRightTrigger @ 7
+    layerOn   := (lTrigger > TriggerThresh) || (rTrigger > TriggerThresh)
 
-    layerOn := (lTrigger > TriggerThresh) || (rTrigger > TriggerThresh)
-    if (!layerOn)
+    if (DebugMode)
+    {
+        ToolTip, % "XIVHotbar2 controller [DEBUG]`n"
+            . "FFXI focused: " ffxiActive "   (keys only send when 1)`n"
+            . "LT: " lTrigger "   RT: " rTrigger "   (need > " TriggerThresh ")`n"
+            . "trigger layer: " (layerOn ? "ON" : "off") "`n"
+            . "buttons: " Format("0x{:04X}", buttons)
+            . "  Up:" ((buttons & XB_DPAD_UP)?1:0)
+            . " Dn:" ((buttons & XB_DPAD_DOWN)?1:0)
+            . " Lf:" ((buttons & XB_DPAD_LEFT)?1:0)
+            . " Rt:" ((buttons & XB_DPAD_RIGHT)?1:0)
+            . " A:" ((buttons & XB_A)?1:0) "`n"
+            . "last key sent: " LastKey
+    }
+
+    ; Only actually send keys while FFXI is focused and a trigger is held.
+    if (!layerOn || (OnlyWhenFFXI && !ffxiActive))
     {
         ResetPadState()
         return
     }
 
     now := A_TickCount
-
     HandleDirection(buttons & XB_DPAD_UP,    "Up",    Key_Up,    now)
     HandleDirection(buttons & XB_DPAD_DOWN,  "Down",  Key_Down,  now)
     HandleDirection(buttons & XB_DPAD_LEFT,  "Left",  Key_Left,  now)
@@ -112,7 +156,7 @@ PollPad:
     ; A button = activate (press only, no repeat)
     aDown := (buttons & XB_A) ? 1 : 0
     if (aDown && !prevA)
-        SendInput, %Key_Activate%
+        SendKey(Key_Activate)
     prevA := aDown
 return
 
@@ -124,15 +168,26 @@ HandleDirection(isDown, name, key, now)
     prev := prev%name%
     if (isDown && !prev)                        ; just pressed -> fire now, arm repeat
     {
-        SendInput, %key%
+        SendKey(key)
         next%name% := now + RepeatDelay
     }
     else if (isDown && now >= next%name%)        ; held long enough -> repeat
     {
-        SendInput, %key%
+        SendKey(key)
         next%name% := now + RepeatRate
     }
     prev%name% := isDown
+}
+
+; Send a key as a real down/hold/up so DirectInput's per-frame polling catches
+; it (a zero-length SendInput tap is often missed by games).
+SendKey(key)
+{
+    global KeyHoldTime, LastKey
+    SendInput, {%key% down}
+    Sleep, %KeyHoldTime%
+    SendInput, {%key% up}
+    LastKey := key " @ " A_Hour ":" A_Min ":" A_Sec
 }
 
 ResetPadState()
@@ -140,3 +195,9 @@ ResetPadState()
     global
     prevUp := 0, prevDown := 0, prevLeft := 0, prevRight := 0, prevA := 0
 }
+
+ToggleDebug:
+    DebugMode := !DebugMode
+    if (!DebugMode)
+        ToolTip
+return

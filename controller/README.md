@@ -45,6 +45,32 @@ slot.
    (left/right along a page, up/down between pages) and press **A** to fire the
    highlighted ability. Release the trigger to return to normal controls.
 
+## Troubleshooting (it's not working?)
+
+Press **Ctrl+Alt+D** with the script running to toggle a **live debug overlay**.
+While debugging, the pad is read even from the desktop, so you can isolate the
+problem:
+
+1. **Overlay says "Pad 0: NOT CONNECTED"** → the script can't see your
+   controller. Make sure it's an XInput (Xbox-style) pad and plugged in; if it's
+   a second controller, set `PadIndex` (0–3) at the top of the `.ahk`.
+2. **Buttons/triggers DON'T change in the overlay when you press them** → the
+   pad isn't reaching XInput at all (a wrapper/Steam may be capturing it). Close
+   other controller software and retry.
+3. **`LT`/`RT` show numbers and the D-pad row flips to 1 when pressed, but
+   nothing happens in game** → input is read fine; the issue is the keys
+   reaching FFXI. Check that:
+   - the line **"FFXI focused: 1"** shows while the game is the active window
+     (keys are only sent when this is 1 and a trigger is held), and
+   - the five `bind` lines are actually loaded in Windower (type one of the keys
+     — e.g. Numpad 5 — by hand on your keyboard; if the cursor doesn't activate,
+     the bind is missing, not the script).
+
+This version sends each key as a real **down → hold (~40ms) → up** using **scan
+codes**, because Windower reads the keyboard through DirectInput and a normal
+instant key "tap" is often missed. If keys still don't register, raise
+`KeyHoldTime` at the top of the script (e.g. to 60–80).
+
 ## Notes & tuning
 
 - **Double-inputs:** because FFXI still reads the pad natively, a button you
