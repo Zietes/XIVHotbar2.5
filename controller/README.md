@@ -47,6 +47,13 @@ slot.
 
 ## Troubleshooting (it's not working?)
 
+**First, confirm the script is even running.** When you launch the `.ahk` it now
+pops a tray notification ("XIVHotbar2 Controller running") that says which XInput
+DLL loaded and whether your controller is detected. If you don't see it, look for
+the green-H AutoHotkey icon in the system tray — no icon means the script isn't
+running (re-launch it, or check AutoHotkey is installed). You can also
+right-click that tray icon → **Toggle debug overlay**.
+
 Press **Ctrl+Alt+D** with the script running to toggle a **live debug overlay**.
 While debugging, the pad is read even from the desktop, so you can isolate the
 problem:

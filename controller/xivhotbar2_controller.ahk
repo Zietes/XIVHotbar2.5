@@ -90,8 +90,20 @@ global LastKey   := "(none)"
 Menu, Tray, Tip, XIVHotbar2 Controller (Ctrl+Alt+D = debug)
 Menu, Tray, Add, Toggle debug overlay, ToggleDebug
 
+; Startup confirmation: probe the pad once and tell the user the script is alive,
+; which XInput DLL loaded, and whether a controller is detected right now.
+VarSetCapacity(probe, 16, 0)
+probeRes := DllCall(XInputGetStateProc, "UInt", PadIndex, "Ptr", &probe, "UInt")
+padMsg := (probeRes = 0) ? ("DETECTED on pad " PadIndex) : ("NOT detected (plug in / check PadIndex). code " probeRes)
+TrayTip, XIVHotbar2 Controller running, % "XInput DLL: " XInputDll "`nController: " padMsg "`n`nPress Ctrl+Alt+D for the debug overlay.", 10, 1
+
 SetTimer, PollPad, %PollInterval%
 return
+
+; ---------------------------------------------------------------------------
+;  Hotkeys  (defined as real hotkeys so they actually fire)
+; ---------------------------------------------------------------------------
+^!d::Gosub, ToggleDebug   ; Ctrl+Alt+D toggles the debug overlay
 
 ; ---------------------------------------------------------------------------
 ;  Main poll loop
